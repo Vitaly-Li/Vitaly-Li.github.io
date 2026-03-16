@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitaly Li — Engineering Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:    #0e0e0e;
+      --white:    #f4f3ef;
+      --mid:      #6b6b6b;
+      --light:    #c8c7c2;
+      --rule:     #dddcd7;
+      --card-bg:  #eeede9;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'Lora', Georgia, serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ── Cursor ─────────────────────────────────────────────── */
+    .cursor {
+      position: fixed;
+      width: 8px; height: 8px;
+      background: var(--black);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s ease, height 0.2s ease, background 0.2s ease;
+      z-index: 9999;
+      mix-blend-mode: multiply;
+    }
+    .cursor.grow {
+      width: 36px; height: 36px;
+      background: transparent;
+      border: 1px solid var(--black);
+    }
+
+    /* ── Nav ────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.75rem 4rem;
+      background: rgba(244,243,239,0.93);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s ease;
+    }
+    nav.scrolled { border-bottom-color: var(--rule); }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .nav-links { display: flex; gap: 2.5rem; }
+    .nav-links a {
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mid);
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0;
+      width: 0; height: 1px;
+      background: var(--black);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover { color: var(--black); }
+    .nav-links a:hover::after { width: 100%; }
+
+    /* ── Hero ───────────────────────────────────────────────── */
+    #home {
+      padding: 0;
+      padding-top: 80px; /* nav height */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Video block — full bleed, no side gutters */
+    .hero-video-wrap {
+      width: 100vw;
+      margin-left: calc(-1 * ((100vw - 100%) / 2));
+      aspect-ratio: 16 / 9;
+      background: #1a1a18;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeIn 1s ease 0.3s forwards;
+    }
+
+    .hero-video-wrap video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Placeholder shown until video is added */
+    .hero-video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      background: #141412;
+    }
+
+    .hero-video-placeholder svg {
+      width: 36px; height: 36px;
+      stroke: #444; fill: none; stroke-width: 1.2;
+    }
+
+    .hero-video-placeholder p {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #3a3a38;
+    }
+
+    /* Thin rule between video and name */
+    .hero-rule {
+      width: 100%;
+      height: 1px;
+      background: var(--rule);
+    }
+
+    /* Name + info row */
+    .hero-bottom {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      align-items: end;
+      padding: 3rem 4rem 4rem;
+      gap: 4rem;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.6s forwards;
+    }
+
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 8vw, 7.5rem);
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.75s forwards;
+    }
+
+    .hero-right {
+      padding-left: 3rem;
+      border-left: 1px solid var(--rule);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.95s forwards;
+    }
+
+    .hero-right-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--light);
+      margin-bottom: 0.3rem;
+    }
+
+    .hero-right-value {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+    .hero-right-value.italic {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    /* ── Section Shared ─────────────────────────────────────── */
+    section { padding: 7rem 4rem; }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    .section-tag {
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--mid);
+      white-space: nowrap;
+    }
+    .section-rule {
+      flex: 1; height: 1px;
+      background: var(--rule);
+      position: relative; top: -3px;
+    }
+
+    /* ── About ──────────────────────────────────────────────── */
+    #about { background: var(--white); }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .about-photo-wrap { position: relative; }
+    .about-photo {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--card-bg);
+      border: 1px solid var(--rule);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      overflow: hidden;
+    }
+    .about-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .about-photo-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .about-photo-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--rule);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .about-photo-icon svg {
+      width: 20px; height: 20px;
+      stroke: var(--mid); fill: none; stroke-width: 1.5;
+    }
+    .about-photo-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--light);
+    }
+    .about-photo-corner {
+      position: absolute;
+      bottom: -1rem; right: -1rem;
+      width: 56px; height: 56px;
+      border-right: 1px solid var(--black);
+      border-bottom: 1px solid var(--black);
+    }
+
+    .about-text h3 {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .about-degree {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 2rem;
+    }
+    .about-bio {
+      color: #3a3a3a;
+      line-height: 1.85;
+      margin-bottom: 2.5rem;
+      font-size: 0.98rem;
+    }
+    .about-contact-list {
+      border-top: 1px solid var(--rule);
+      padding-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .about-contact-row {
+      display: flex;
+      gap: 2rem;
+      align-items: baseline;
+    }
+    .about-contact-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mid);
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .about-contact-value {
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .about-contact-value:hover { color: var(--mid); }
+
+    /* ── Projects ───────────────────────────────────────────── */
+    #projects { background: var(--card-bg); }
+
+    .projects-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .project-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--white);
+      overflow: hidden;
+      transition: box-shadow 0.35s ease;
+    }
+    .project-card:hover {
+      box-shadow: 0 8px 48px rgba(0,0,0,0.09);
+      position: relative; z-index: 1;
+    }
+    .project-card:nth-child(even) { direction: rtl; }
+    .project-card:nth-child(even) > * { direction: ltr; }
+
+    .project-image {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+    }
+    .project-image-inner {
+      position: absolute; inset: 0;
+      transition: transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .project-card:nth-child(1) .project-image-inner { background: linear-gradient(140deg,#d0cfca,#bcbbb6); }
+    .project-card:nth-child(2) .project-image-inner { background: linear-gradient(140deg,#c5c4bf,#b2b1ac); }
+    .project-card:nth-child(3) .project-image-inner { background: linear-gradient(140deg,#cac9c4,#b8b7b2); }
+    .project-card:hover .project-image-inner { transform: scale(1.04); }
+
+    .project-image-placeholder {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0.5rem;
+    }
+    .project-image-placeholder svg {
+      width: 26px; height: 26px;
+      stroke: rgba(255,255,255,0.4); fill: none; stroke-width: 1.5;
+    }
+    .project-image-placeholder span {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .project-body {
+      padding: 3rem 3.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .project-course {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 0.65rem;
+    }
+    .project-title {
+      font-family: var(--font-display);
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+    .project-title em { font-style: italic; font-weight: 400; }
+    .project-desc {
+      font-size: 0.93rem;
+      color: #4a4a4a;
+      line-height: 1.8;
+      margin-bottom: 1.75rem;
+    }
+    .project-specs { margin-bottom: 1.75rem; }
+    .project-specs-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 0.6rem;
+    }
+    .project-specs-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .spec-tag {
+      font-size: 0.73rem;
+      letter-spacing: 0.05em;
+      padding: 0.22rem 0.7rem;
+      border: 1px solid var(--rule);
+      color: var(--mid);
+      font-family: var(--font-body);
+    }
+    .project-arrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--black);
+      padding-bottom: 1px;
+      width: fit-content;
+      transition: gap 0.2s ease;
+    }
+    .project-arrow:hover { gap: 1rem; }
+
+    /* ── Contact ────────────────────────────────────────────── */
+    #contact { background: var(--black); color: var(--white); }
+    #contact .section-tag  { color: #444; }
+    #contact .section-rule { background: #222; }
+
+    .contact-headline {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5.5vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 4rem;
+      max-width: 600px;
+    }
+    .contact-headline em { font-style: italic; font-weight: 400; }
+
+    .contact-row {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      border-top: 1px solid #1f1f1f;
+      padding-top: 2.5rem;
+      gap: 3rem;
+    }
+    .contact-item-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 0.55rem;
+    }
+    .contact-item-value {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--white);
+      transition: color 0.2s;
+    }
+    .contact-item-value:hover { color: var(--light); }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      background: var(--black);
+      border-top: 1px solid #181818;
+      padding: 1.75rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    footer span { font-size: 0.7rem; letter-spacing: 0.1em; color: #333; }
+
+    /* ── Keyframes ──────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity:0; } to { opacity:1; }
+    }
+
+    /* ── Scroll Reveal ──────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-28px);
+      transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.8s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal-left.visible { opacity:1; transform:translateX(0); }
+
+    .reveal-scale {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+      transition: opacity 0.75s cubic-bezier(0.22,1,0.36,1),
+                  transform 0.75s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal-scale.visible { opacity:1; transform:translateY(0) scale(1); }
+
+    .reveal-d1 { transition-delay: 0.10s; }
+    .reveal-d2 { transition-delay: 0.20s; }
+    .reveal-d3 { transition-delay: 0.30s; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      nav { padding: 1.5rem 2rem; }
+      section { padding: 5rem 2rem; }
+
+      .hero-bottom {
+        grid-template-columns: 1fr;
+        padding: 2.5rem 2rem 3rem;
+        gap: 2.5rem;
+      }
+      .hero-right {
+        padding-left: 0;
+        padding-top: 2rem;
+        border-left: none;
+        border-top: 1px solid var(--rule);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2rem;
+      }
+
+      .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .about-photo { aspect-ratio: 1/1; max-width: 260px; }
+
+      .project-card,
+      .project-card:nth-child(even) { grid-template-columns: 1fr; direction: ltr; }
+      .project-image { min-height: 220px; }
+      .project-body { padding: 2rem; }
+
+      .contact-row { grid-template-columns: 1fr; gap: 1.5rem; }
+      footer { flex-direction: column; gap: 0.75rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+
+  <!-- ── Nav ─────────────────────────────────────────────────── -->
+  <nav id="nav">
+    <a class="nav-logo" href="#home">Vitaly Li</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ────────────────────────────────────────────────── -->
+  <section id="home">
+
+    <!-- 16:9 video — swap src to your file when ready -->
+    <div class="hero-video-wrap">
+      <!--
+        TO ADD YOUR VIDEO:
+        1. Place your video file (e.g. synth-demo.mp4) in the same folder as index.html
+        2. Replace the placeholder div below with:
+           <video src="synth-demo.mp4" autoplay muted loop playsinline></video>
+      -->
+      <div class="hero-video-placeholder">
+        <svg viewBox="0 0 24 24">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <polygon points="10,9 10,15 15,12"/>
+        </svg>
+        <p>Drop your synth video here — see comment in HTML</p>
+      </div>
+    </div>
+
+    <div class="hero-rule"></div>
+
+    <!-- Name + info -->
+    <div class="hero-bottom">
+      <div class="hero-left">
+        <p class="hero-label">Engineering Portfolio</p>
+        <h1 class="hero-name">Vitaly Li</h1>
+      </div>
+
+      <div class="hero-right">
+        <div>
+          <p class="hero-right-label">Degree</p>
+          <p class="hero-right-value">Electrical &amp; Computer Engineering</p>
+        </div>
+        <div>
+          <p class="hero-right-label">Institution</p>
+          <p class="hero-right-value">Oregon State University – Cascades</p>
+        </div>
+        <div>
+          <p class="hero-right-label">Focus</p>
+          <p class="hero-right-value italic">Embedded Systems &amp; Circuit Design</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── About ───────────────────────────────────────────────── -->
+  <section id="about">
+    <div class="section-header reveal">
+      <span class="section-tag">01 — About</span>
+      <div class="section-rule"></div>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-photo-wrap reveal-left">
+        <div class="about-photo">
+          <!--
+            TO ADD YOUR HEADSHOT:
+            Replace the placeholder div below with:
+            <img src="headshot.jpg" alt="Vitaly Li" />
+          -->
+          <div class="about-photo-placeholder">
+            <div class="about-photo-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </div>
+            <span class="about-photo-label">Add headshot here</span>
+          </div>
+        </div>
+        <div class="about-photo-corner"></div>
+      </div>
+
+      <div class="about-text reveal reveal-d1">
+        <h3>Vitaly Li</h3>
+        <p class="about-degree">B.S. Electrical &amp; Computer Engineering · OSU-Cascades · Class of 20XX</p>
+        <p class="about-bio">
+          I'm an engineering student at Oregon State University – Cascades with a focus on
+          embedded systems and circuit design. I'm drawn to problems at the intersection of
+          hardware and software — work that is precise, purposeful, and well-considered.
+          Outside the lab, I shoot film photography and think a lot about how things are made.
+        </p>
+        <div class="about-contact-list">
+          <div class="about-contact-row">
+            <span class="about-contact-label">Email</span>
+            <a class="about-contact-value" href="mailto:li.vitaly@oregonstate.edu">li.vitaly@oregonstate.edu</a>
+          </div>
+          <div class="about-contact-row">
+            <span class="about-contact-label">University</span>
+            <span class="about-contact-value">Oregon State University – Cascades</span>
+          </div>
+          <div class="about-contact-row">
+            <span class="about-contact-label">Location</span>
+            <span class="about-contact-value">Bend, Oregon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Projects ────────────────────────────────────────────── -->
+  <section id="projects">
+    <div class="section-header reveal">
+      <span class="section-tag">02 — Projects</span>
+      <div class="section-rule"></div>
+    </div>
+
+    <div class="projects-list">
+
+      <div class="project-card reveal-scale">
+        <div class="project-image">
+          <div class="project-image-inner"></div>
+          <div class="project-image-placeholder">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Add project photos</span>
+          </div>
+        </div>
+        <div class="project-body">
+          <p class="project-course">ENGR 202</p>
+          <h2 class="project-title">Project <em>Title Here</em></h2>
+          <p class="project-desc">
+            Brief description of your ENGR 202 project — what it does, what problem it solves,
+            and any notable functional modes or operating requirements. Two to three sentences is ideal.
+          </p>
+          <div class="project-specs">
+            <p class="project-specs-label">Skills &amp; Specifications</p>
+            <div class="project-specs-list">
+              <span class="spec-tag">Circuit Design</span>
+              <span class="spec-tag">PCB Layout</span>
+              <span class="spec-tag">Oscilloscope</span>
+              <span class="spec-tag">Soldering</span>
+              <span class="spec-tag">Multimeter</span>
+            </div>
+          </div>
+          <a href="#" class="project-arrow">View project &rarr;</a>
+        </div>
+      </div>
+
+      <div class="project-card reveal-scale reveal-d1">
+        <div class="project-image">
+          <div class="project-image-inner"></div>
+          <div class="project-image-placeholder">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Add project photos</span>
+          </div>
+        </div>
+        <div class="project-body">
+          <p class="project-course">ENGR 103</p>
+          <h2 class="project-title">Project <em>Title Here</em></h2>
+          <p class="project-desc">
+            Duplicate this card for each additional project — courses, internships,
+            personal builds, or research. Copy the project-card block and update the content.
+          </p>
+          <div class="project-specs">
+            <p class="project-specs-label">Skills &amp; Specifications</p>
+            <div class="project-specs-list">
+              <span class="spec-tag">Python</span>
+              <span class="spec-tag">Data Analysis</span>
+              <span class="spec-tag">Technical Writing</span>
+            </div>
+          </div>
+          <a href="#" class="project-arrow">View project &rarr;</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Contact ─────────────────────────────────────────────── -->
+  <section id="contact">
+    <div class="section-header reveal">
+      <span class="section-tag">03 — Contact</span>
+      <div class="section-rule"></div>
+    </div>
+    <p class="contact-headline reveal">
+      Open to internships,<br><em>research, &amp; collabs.</em>
+    </p>
+    <div class="contact-row">
+      <div class="reveal reveal-d1">
+        <p class="contact-item-label">Email</p>
+        <a class="contact-item-value" href="mailto:li.vitaly@oregonstate.edu">li.vitaly@oregonstate.edu</a>
+      </div>
+      <div class="reveal reveal-d2">
+        <p class="contact-item-label">University</p>
+        <span class="contact-item-value">OSU-Cascades</span>
+      </div>
+      <div class="reveal reveal-d3">
+        <p class="contact-item-label">Based in</p>
+        <span class="contact-item-value">Bend, Oregon</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ──────────────────────────────────────────────── -->
+  <footer>
+    <span>© 2025 Vitaly Li</span>
+    <span>Oregon State University – Cascades</span>
+  </footer>
+
+  <script>
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+    });
+    document.querySelectorAll('a, .project-card').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('grow'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('grow'));
+    });
+
+    // Nav border on scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    // Scroll reveal
+    const allReveal = document.querySelectorAll('.reveal, .reveal-left, .reveal-scale');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    allReveal.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
