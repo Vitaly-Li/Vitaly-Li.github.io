@@ -330,17 +330,33 @@
             aspect-ratio: 4/3;
             overflow: hidden;
             background: var(--black);
+            position: relative;
         }
 
         .project-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.6s ease;
+            transition: opacity 0.4s ease;
         }
 
-        .project:hover .project-image {
-            transform: scale(1.03);
+        .project-image-hover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .project-image-container:hover .project-image {
+            opacity: 0;
+        }
+
+        .project-image-container:hover .project-image-hover {
+            opacity: 1;
         }
 
         .project-content {
@@ -592,7 +608,7 @@
     <section class="about" id="about">
         <div class="about-inner">
             <span class="section-label">001 about</span>
-            <p class="about-text">I'm a sophomore at Oregon State University – Cascades studying Engineering Science. Most of my work stems from personal passion: analog synthesizers, photography tools, and custom climbing and mountaineering gear. Outside of school I find solace in the mountains — climbing, mountaineering, skiing, and paragliding. I'm drawn to challenging things. When I'm not outside I'm usually making something, whether that's music, photos, videos, or whatever project I've engrossed myself in.</p>
+            <p class="about-text">I'm a sophomore at Oregon State University – Cascades studying Engineering Science. Most of my work stems from personal passion — analog synthesizers, small photography tools, and custom climbing and mountaineering gear. Outside of school I find solace in the mountains — climbing, mountaineering, skiing, and paragliding. I'm drawn to difficult things. When I'm not outside I'm usually making something, whether that's music, photos, videos, or whatever project I've engrossed myself in.</p>
             <div class="about-contact">
                 <a href="mailto:lv@oregonstate.edu">lv@oregonstate.edu</a><br>
                 osu–cascades, bend, oregon
@@ -612,6 +628,7 @@
         <article class="project">
             <div class="project-image-container">
                 <img src="synth-photo.jpg" alt="Analog Modular Synthesizer" class="project-image">
+                <img src="synth-photo2.jpg" alt="Analog Modular Synthesizer" class="project-image-hover">
             </div>
             <div class="project-content">
                 <div class="project-header">
@@ -629,6 +646,7 @@
         <article class="project">
             <div class="project-image-container">
                 <img src="generator-photo.jpg" alt="Hand Crank Generator" class="project-image">
+                <img src="generator-photo2.jpg" alt="Hand Crank Generator" class="project-image-hover">
             </div>
             <div class="project-content">
                 <div class="project-header">
@@ -753,8 +771,58 @@
                     video.src = blobUrl;
                     video.load();
                     
-                    video.addEventListener('loadedmetadata', () => {
-                        setupScrollVideo(video);
+                    video.addEventListener('canplaythrough', () => {
+                        // Warm up the decoder by playing briefly
+                        video.play().then(() => {
+                            setTimeout(() => {
+                                video.pause();
+                                video.currentTime = 0;
+                                
+                                // Now set up scroll-driven playback
+                                const duration = video.duration;
+                                let ticking = false;
+                                let lastProgress = -1;
+
+                                const updateVideo = () => {
+                                    const heroRect = hero.getBoundingClientRect();
+                                    const scrollableDistance = hero.offsetHeight - window.innerHeight;
+                                    const scrolled = -heroRect.top;
+                                    const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
+                                    
+                                    if (Math.abs(progress - lastProgress) > 0.002) {
+                                        lastProgress = progress;
+                                        
+                                        if (!ticking) {
+                                            requestAnimationFrame(() => {
+                                                // Use fastSeek if available (better for mobile)
+                                                const targetTime = progress * duration;
+                                                if (video.fastSeek) {
+                                                    video.fastSeek(targetTime);
+                                                } else {
+                                                    video.currentTime = targetTime;
+                                                }
+                                                progressBar.style.width = (progress * 100) + '%';
+                                                ticking = false;
+                                            });
+                                            ticking = true;
+                                        }
+                                    }
+
+                                    if (!hasScrolled && scrolled > 10) {
+                                        hasScrolled = true;
+                                        scrollHint.classList.add('hidden');
+                                    }
+                                };
+
+                                window.addEventListener('scroll', updateVideo, { passive: true });
+                                window.addEventListener('touchmove', updateVideo, { passive: true });
+                                updateVideo();
+                                hideLoading();
+                            }, 100);
+                        }).catch(() => {
+                            // Play blocked, try without warmup
+                            setupScrollVideo(video);
+                        });
                     });
                 })
                 .catch(() => {
@@ -768,7 +836,7 @@
                     hideLoading();
                 });
             
-            // Fallback after 15 seconds
+            // Fallback after 20 seconds
             setTimeout(() => {
                 if (document.body.classList.contains('loading')) {
                     hero.style.height = '100vh';
@@ -779,7 +847,7 @@
                     video.play().catch(() => {});
                     hideLoading();
                 }
-            }, 15000);
+            }, 20000);
         } else {
             // Desktop: normal approach
             video.addEventListener('loadedmetadata', () => setupScrollVideo(video));
