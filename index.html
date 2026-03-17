@@ -691,7 +691,6 @@
         const scrollHint = document.querySelector('.scroll-hint');
         const loadingOverlay = document.querySelector('.loading-overlay');
         let hasScrolled = false;
-        let videoReady = false;
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function hideLoading() {
@@ -700,18 +699,13 @@
             window.scrollTo(0, 0);
         }
 
-        function setupVideo() {
-            const duration = video.duration;
+        function setupScrollVideo(videoEl) {
+            const duration = videoEl.duration;
             if (!duration || isNaN(duration)) return;
             
-            videoReady = true;
-            video.pause();
-            video.currentTime = 0;
-            
-            // On desktop, hide loading now. On mobile, wait for canplaythrough or autoplay fallback
-            if (!isMobile) {
-                hideLoading();
-            }
+            videoEl.pause();
+            videoEl.currentTime = 0;
+            hideLoading();
             
             let ticking = false;
             let lastProgress = -1;
@@ -722,12 +716,12 @@
                 const scrolled = -heroRect.top;
                 const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
                 
-                if (Math.abs(progress - lastProgress) > 0.001) {
+                if (Math.abs(progress - lastProgress) > 0.002) {
                     lastProgress = progress;
                     
                     if (!ticking) {
                         requestAnimationFrame(() => {
-                            video.currentTime = progress * duration;
+                            videoEl.currentTime = progress * duration;
                             progressBar.style.width = (progress * 100) + '%';
                             ticking = false;
                         });
@@ -742,37 +736,53 @@
             };
 
             window.addEventListener('scroll', updateVideo, { passive: true });
-            if (isMobile) {
-                window.addEventListener('touchmove', updateVideo, { passive: true });
-            }
+            window.addEventListener('touchmove', updateVideo, { passive: true });
             updateVideo();
         }
 
-        video.addEventListener('loadedmetadata', setupVideo);
-        if (video.readyState >= 1) setupVideo();
-        
-        // Mobile: wait for canplaythrough before hiding loading
         if (isMobile) {
-            video.addEventListener('canplaythrough', () => {
-                hideLoading();
-            });
+            // Mobile: fetch entire video as blob first
+            fetch('analog.mp4')
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    video.src = blobUrl;
+                    video.load();
+                    
+                    video.addEventListener('loadedmetadata', () => {
+                        setupScrollVideo(video);
+                    });
+                })
+                .catch(() => {
+                    // Fetch failed, fall back to autoplay
+                    hero.style.height = '100vh';
+                    scrollHint.style.display = 'none';
+                    progressBar.parentElement.style.display = 'none';
+                    video.setAttribute('autoplay', '');
+                    video.setAttribute('loop', '');
+                    video.play().catch(() => {});
+                    hideLoading();
+                });
             
-            // Mobile fallback: switch to autoplay after 10 seconds
+            // Fallback after 15 seconds
             setTimeout(() => {
-                video.setAttribute('autoplay', '');
-                video.setAttribute('loop', '');
-                video.play().catch(() => {});
-                scrollHint.style.display = 'none';
-                progressBar.parentElement.style.display = 'none';
-                hero.style.height = '100vh';
-                hideLoading();
-            }, 10000);
+                if (document.body.classList.contains('loading')) {
+                    hero.style.height = '100vh';
+                    scrollHint.style.display = 'none';
+                    progressBar.parentElement.style.display = 'none';
+                    video.setAttribute('autoplay', '');
+                    video.setAttribute('loop', '');
+                    video.play().catch(() => {});
+                    hideLoading();
+                }
+            }, 15000);
+        } else {
+            // Desktop: normal approach
+            video.addEventListener('loadedmetadata', () => setupScrollVideo(video));
+            if (video.readyState >= 1) setupScrollVideo(video);
+            
+            setTimeout(hideLoading, 8000);
         }
-        
-        // Fallback: hide loading after 12 seconds no matter what
-        setTimeout(() => {
-            hideLoading();
-        }, 12000);
     </script>
 </body>
 </html>
