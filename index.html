@@ -757,7 +757,7 @@
                 hideLoading();
             });
             
-            // Mobile fallback: switch to autoplay after 4 seconds
+            // Mobile fallback: switch to autoplay after 10 seconds
             setTimeout(() => {
                 video.setAttribute('autoplay', '');
                 video.setAttribute('loop', '');
@@ -766,13 +766,13 @@
                 progressBar.parentElement.style.display = 'none';
                 hero.style.height = '100vh';
                 hideLoading();
-            }, 4000);
+            }, 10000);
         }
         
-        // Fallback: hide loading after 6 seconds no matter what
+        // Fallback: hide loading after 12 seconds no matter what
         setTimeout(() => {
             hideLoading();
-        }, 6000);
+        }, 12000);
     </script>
 </body>
 </html>
