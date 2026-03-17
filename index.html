@@ -720,6 +720,8 @@
             
             let ticking = false;
             let lastProgress = -1;
+            let lastTime = performance.now();
+            let lastScrollTop = 0;
 
             const updateVideo = () => {
                 const heroRect = hero.getBoundingClientRect();
@@ -727,7 +729,17 @@
                 const scrolled = -heroRect.top;
                 const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
                 
-                if (Math.abs(progress - lastProgress) > 0.008) {
+                // Calculate scroll velocity
+                const now = performance.now();
+                const dt = now - lastTime;
+                const velocity = Math.abs(scrolled - lastScrollTop) / (dt || 1);
+                lastTime = now;
+                lastScrollTop = scrolled;
+                
+                // Higher threshold when scrolling fast
+                const threshold = velocity > 2 ? 0.03 : 0.008;
+                
+                if (Math.abs(progress - lastProgress) > threshold) {
                     lastProgress = progress;
                     
                     if (!ticking) {
@@ -776,6 +788,8 @@
                                 const duration = video.duration;
                                 let ticking = false;
                                 let lastProgress = -1;
+                                let lastTime = performance.now();
+                                let lastScrollTop = 0;
 
                                 const updateVideo = () => {
                                     const heroRect = hero.getBoundingClientRect();
@@ -783,12 +797,21 @@
                                     const scrolled = -heroRect.top;
                                     const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
                                     
-                                    if (Math.abs(progress - lastProgress) > 0.008) {
+                                    // Calculate scroll velocity
+                                    const now = performance.now();
+                                    const dt = now - lastTime;
+                                    const velocity = Math.abs(scrolled - lastScrollTop) / (dt || 1);
+                                    lastTime = now;
+                                    lastScrollTop = scrolled;
+                                    
+                                    // Higher threshold when scrolling fast
+                                    const threshold = velocity > 2 ? 0.03 : 0.008;
+                                    
+                                    if (Math.abs(progress - lastProgress) > threshold) {
                                         lastProgress = progress;
                                         
                                         if (!ticking) {
                                             requestAnimationFrame(() => {
-                                                // Use fastSeek if available (better for mobile)
                                                 const targetTime = progress * duration;
                                                 if (video.fastSeek) {
                                                     video.fastSeek(targetTime);
