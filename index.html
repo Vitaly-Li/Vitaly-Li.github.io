@@ -211,8 +211,8 @@
 
         .about-image {
             width: 100%;
-            max-width: 600px;
-            aspect-ratio: 3/2;
+            max-width: 400px;
+            aspect-ratio: 4/5;
             object-fit: cover;
         }
 
@@ -532,7 +532,7 @@
 
     <section class="hero">
         <div class="hero-video-wrapper">
-            <video class="hero-video" muted playsinline preload="auto">
+            <video class="hero-video" muted playsinline preload="auto" webkit-playsinline>
                 <source src="analog.mp4" type="video/mp4">
             </video>
             <div class="video-progress">
@@ -653,18 +653,67 @@
         const progressBar = document.querySelector('.video-progress-bar');
         const scrollHint = document.querySelector('.scroll-hint');
         let hasScrolled = false;
+        let videoReady = false;
+
+        // Force full video load
+        video.load();
+        
+        // Try to buffer the entire video
+        function bufferVideo() {
+            return new Promise((resolve) => {
+                if (video.readyState >= 4) {
+                    resolve();
+                    return;
+                }
+                
+                // Create a hidden play to force buffering
+                video.muted = true;
+                video.playsInline = true;
+                
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        video.pause();
+                        video.currentTime = 0;
+                        resolve();
+                    }).catch(() => {
+                        // Autoplay blocked, try alternative
+                        resolve();
+                    });
+                } else {
+                    resolve();
+                }
+            });
+        }
 
         function setupVideo() {
             const duration = video.duration;
             if (!duration || isNaN(duration)) return;
+            
+            videoReady = true;
+            let ticking = false;
+            let lastProgress = -1;
 
             const updateVideo = () => {
                 const heroRect = hero.getBoundingClientRect();
                 const scrollableDistance = hero.offsetHeight - window.innerHeight;
                 const scrolled = -heroRect.top;
                 const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
-                video.currentTime = progress * duration;
-                progressBar.style.width = (progress * 100) + '%';
+                
+                // Only update if progress changed significantly
+                if (Math.abs(progress - lastProgress) > 0.001) {
+                    lastProgress = progress;
+                    
+                    // Use requestAnimationFrame for smoother updates
+                    if (!ticking) {
+                        requestAnimationFrame(() => {
+                            video.currentTime = progress * duration;
+                            progressBar.style.width = (progress * 100) + '%';
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                }
 
                 if (!hasScrolled && scrolled > 10) {
                     hasScrolled = true;
@@ -672,12 +721,35 @@
                 }
             };
 
+            // Use both scroll and touchmove for mobile
             window.addEventListener('scroll', updateVideo, { passive: true });
+            window.addEventListener('touchmove', updateVideo, { passive: true });
             updateVideo();
         }
 
-        video.addEventListener('loadedmetadata', setupVideo);
-        if (video.readyState >= 1) setupVideo();
+        // Wait for metadata then try to buffer
+        video.addEventListener('loadedmetadata', async () => {
+            await bufferVideo();
+            setupVideo();
+        });
+        
+        // Also try if already loaded
+        if (video.readyState >= 1) {
+            bufferVideo().then(setupVideo);
+        }
+        
+        // Fallback: if video still won't scrub after 3 seconds, switch to autoplay
+        setTimeout(() => {
+            if (!videoReady || video.readyState < 2) {
+                video.setAttribute('autoplay', '');
+                video.setAttribute('loop', '');
+                video.play().catch(() => {});
+                scrollHint.textContent = '';
+                scrollHint.style.display = 'none';
+                progressBar.parentElement.style.display = 'none';
+                hero.style.height = '100vh';
+            }
+        }, 3000);
     </script>
 </body>
 </html>
