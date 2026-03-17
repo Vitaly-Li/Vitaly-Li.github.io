@@ -708,8 +708,10 @@
             video.pause();
             video.currentTime = 0;
             
-            // Hide loading once video is ready
-            hideLoading();
+            // On desktop, hide loading now. On mobile, wait for canplaythrough or autoplay fallback
+            if (!isMobile) {
+                hideLoading();
+            }
             
             let ticking = false;
             let lastProgress = -1;
@@ -749,27 +751,28 @@
         video.addEventListener('loadedmetadata', setupVideo);
         if (video.readyState >= 1) setupVideo();
         
-        // Fallback: hide loading after 5 seconds no matter what
-        setTimeout(() => {
-            if (!videoReady) {
-                hideLoading();
-            }
-        }, 5000);
-        
-        // Mobile fallback: if scrubbing doesn't work after 4 seconds, switch to autoplay
+        // Mobile: wait for canplaythrough before hiding loading
         if (isMobile) {
+            video.addEventListener('canplaythrough', () => {
+                hideLoading();
+            });
+            
+            // Mobile fallback: switch to autoplay after 4 seconds
             setTimeout(() => {
-                if (!videoReady || video.readyState < 2) {
-                    video.setAttribute('autoplay', '');
-                    video.setAttribute('loop', '');
-                    video.play().catch(() => {});
-                    scrollHint.style.display = 'none';
-                    progressBar.parentElement.style.display = 'none';
-                    hero.style.height = '100vh';
-                    hideLoading();
-                }
+                video.setAttribute('autoplay', '');
+                video.setAttribute('loop', '');
+                video.play().catch(() => {});
+                scrollHint.style.display = 'none';
+                progressBar.parentElement.style.display = 'none';
+                hero.style.height = '100vh';
+                hideLoading();
             }, 4000);
         }
+        
+        // Fallback: hide loading after 6 seconds no matter what
+        setTimeout(() => {
+            hideLoading();
+        }, 6000);
     </script>
 </body>
 </html>
