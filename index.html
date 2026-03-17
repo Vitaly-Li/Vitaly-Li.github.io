@@ -129,6 +129,8 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            will-change: contents;
+            transform: translateZ(0);
         }
 
         .video-progress {
@@ -176,18 +178,6 @@
             align-items: flex-end;
         }
 
-        .hero-content::before {
-            content: '';
-            position: absolute;
-            top: -20px;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: var(--cream);
-            mix-blend-mode: difference;
-            pointer-events: none;
-        }
-
         .hero-name {
             font-family: 'Inter', sans-serif;
             font-size: clamp(48px, 15vw, 180px);
@@ -195,8 +185,6 @@
             line-height: 0.9;
             letter-spacing: -0.04em;
             text-transform: lowercase;
-            position: relative;
-            margin-top: -15px;
         }
 
         .hero-meta {
@@ -739,12 +727,17 @@
                 const scrolled = -heroRect.top;
                 const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
                 
-                if (Math.abs(progress - lastProgress) > 0.002) {
+                if (Math.abs(progress - lastProgress) > 0.008) {
                     lastProgress = progress;
                     
                     if (!ticking) {
                         requestAnimationFrame(() => {
-                            videoEl.currentTime = progress * duration;
+                            const targetTime = progress * duration;
+                            if (videoEl.fastSeek) {
+                                videoEl.fastSeek(targetTime);
+                            } else {
+                                videoEl.currentTime = targetTime;
+                            }
                             progressBar.style.width = (progress * 100) + '%';
                             ticking = false;
                         });
@@ -790,7 +783,7 @@
                                     const scrolled = -heroRect.top;
                                     const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
                                     
-                                    if (Math.abs(progress - lastProgress) > 0.002) {
+                                    if (Math.abs(progress - lastProgress) > 0.008) {
                                         lastProgress = progress;
                                         
                                         if (!ticking) {
