@@ -39,6 +39,39 @@
             color: var(--white);
         }
 
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--black);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--cream);
+            text-transform: lowercase;
+            letter-spacing: 0.1em;
+            opacity: 0.5;
+        }
+
+        body.loading {
+            overflow: hidden;
+        }
+
         /* Nav */
         nav {
             position: fixed;
@@ -520,7 +553,11 @@
         }
     </style>
 </head>
-<body>
+<body class="loading">
+    <div class="loading-overlay">
+        <span class="loading-text">loading</span>
+    </div>
+
     <nav>
         <a href="#" class="nav-logo">vitaly li</a>
         <div class="nav-links">
@@ -652,38 +689,15 @@
         const hero = document.querySelector('.hero');
         const progressBar = document.querySelector('.video-progress-bar');
         const scrollHint = document.querySelector('.scroll-hint');
+        const loadingOverlay = document.querySelector('.loading-overlay');
         let hasScrolled = false;
         let videoReady = false;
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        // Force full video load
-        video.load();
-        
-        // Try to buffer the entire video
-        function bufferVideo() {
-            return new Promise((resolve) => {
-                if (video.readyState >= 4) {
-                    resolve();
-                    return;
-                }
-                
-                // Create a hidden play to force buffering
-                video.muted = true;
-                video.playsInline = true;
-                
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        video.pause();
-                        video.currentTime = 0;
-                        resolve();
-                    }).catch(() => {
-                        // Autoplay blocked, try alternative
-                        resolve();
-                    });
-                } else {
-                    resolve();
-                }
-            });
+        function hideLoading() {
+            document.body.classList.remove('loading');
+            loadingOverlay.classList.add('hidden');
+            window.scrollTo(0, 0);
         }
 
         function setupVideo() {
@@ -691,6 +705,12 @@
             if (!duration || isNaN(duration)) return;
             
             videoReady = true;
+            video.pause();
+            video.currentTime = 0;
+            
+            // Hide loading once video is ready
+            hideLoading();
+            
             let ticking = false;
             let lastProgress = -1;
 
@@ -700,11 +720,9 @@
                 const scrolled = -heroRect.top;
                 const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
                 
-                // Only update if progress changed significantly
                 if (Math.abs(progress - lastProgress) > 0.001) {
                     lastProgress = progress;
                     
-                    // Use requestAnimationFrame for smoother updates
                     if (!ticking) {
                         requestAnimationFrame(() => {
                             video.currentTime = progress * duration;
@@ -721,35 +739,37 @@
                 }
             };
 
-            // Use both scroll and touchmove for mobile
             window.addEventListener('scroll', updateVideo, { passive: true });
-            window.addEventListener('touchmove', updateVideo, { passive: true });
+            if (isMobile) {
+                window.addEventListener('touchmove', updateVideo, { passive: true });
+            }
             updateVideo();
         }
 
-        // Wait for metadata then try to buffer
-        video.addEventListener('loadedmetadata', async () => {
-            await bufferVideo();
-            setupVideo();
-        });
+        video.addEventListener('loadedmetadata', setupVideo);
+        if (video.readyState >= 1) setupVideo();
         
-        // Also try if already loaded
-        if (video.readyState >= 1) {
-            bufferVideo().then(setupVideo);
-        }
-        
-        // Fallback: if video still won't scrub after 3 seconds, switch to autoplay
+        // Fallback: hide loading after 5 seconds no matter what
         setTimeout(() => {
-            if (!videoReady || video.readyState < 2) {
-                video.setAttribute('autoplay', '');
-                video.setAttribute('loop', '');
-                video.play().catch(() => {});
-                scrollHint.textContent = '';
-                scrollHint.style.display = 'none';
-                progressBar.parentElement.style.display = 'none';
-                hero.style.height = '100vh';
+            if (!videoReady) {
+                hideLoading();
             }
-        }, 3000);
+        }, 5000);
+        
+        // Mobile fallback: if scrubbing doesn't work after 4 seconds, switch to autoplay
+        if (isMobile) {
+            setTimeout(() => {
+                if (!videoReady || video.readyState < 2) {
+                    video.setAttribute('autoplay', '');
+                    video.setAttribute('loop', '');
+                    video.play().catch(() => {});
+                    scrollHint.style.display = 'none';
+                    progressBar.parentElement.style.display = 'none';
+                    hero.style.height = '100vh';
+                    hideLoading();
+                }
+            }, 4000);
+        }
     </script>
 </body>
 </html>
