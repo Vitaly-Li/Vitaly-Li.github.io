@@ -201,11 +201,11 @@
 
         .hero-meta {
             font-family: 'Space Mono', monospace;
-            font-size: 14px;
+            font-size: 11px;
             text-align: right;
             text-transform: lowercase;
             opacity: 0.6;
-            max-width: 180px;
+            max-width: 140px;
             line-height: 1.6;
         }
 
@@ -716,6 +716,7 @@
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function hideLoading() {
+            if (!document.body.classList.contains('loading')) return;
             document.body.classList.remove('loading');
             loadingOverlay.classList.add('hidden');
             window.scrollTo(0, 0);
