@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vitaly li</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #000;
+            --white: #fff;
+            --cream: #e5e0d5;
+            --red: #ff2800;
+            --grey: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--cream);
+            color: var(--black);
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        ::selection {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        /* Nav */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            mix-blend-mode: difference;
+            color: var(--white);
+        }
+
+        .nav-logo {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: inherit;
+            text-decoration: none;
+            text-transform: lowercase;
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            height: 400vh;
+        }
+
+        .hero-video-wrapper {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            background: var(--black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .video-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--red);
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Space Mono', monospace;
+            font-size: 24px;
+            color: var(--white);
+            opacity: 0.5;
+            text-transform: lowercase;
+            letter-spacing: 0.08em;
+            transition: opacity 0.5s;
+        }
+
+        .scroll-hint.hidden {
+            opacity: 0;
+        }
+
+        .hero-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--cream);
+            padding: 24px 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .hero-content::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: var(--cream);
+            mix-blend-mode: difference;
+            pointer-events: none;
+        }
+
+        .hero-name {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(48px, 15vw, 180px);
+            font-weight: 300;
+            line-height: 0.9;
+            letter-spacing: -0.04em;
+            text-transform: lowercase;
+            position: relative;
+            margin-top: -15px;
+        }
+
+        .hero-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            text-align: right;
+            text-transform: lowercase;
+            opacity: 0.6;
+            max-width: 140px;
+            line-height: 1.6;
+        }
+
+        /* Section divider */
+        .divider {
+            height: 1px;
+            background: var(--black);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .divider.drawn {
+            transform: scaleX(1);
+        }
+
+        /* About - inverted */
+        .about {
+            background: var(--black);
+            color: var(--cream);
+            padding: 80px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: start;
+        }
+
+        .about-inner {
+            max-width: 480px;
+        }
+
+        .about-image-container {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .about-image {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 3/2;
+            object-fit: cover;
+        }
+
+        .section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            opacity: 0.5;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: currentColor;
+            opacity: 0.2;
+        }
+
+        .about-text {
+            font-size: 16px;
+            font-weight: 300;
+            line-height: 1.7;
+            max-width: 480px;
+        }
+
+        .about-contact {
+            margin-top: 48px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            line-height: 2;
+            opacity: 0.6;
+        }
+
+        .about-contact a {
+            color: var(--red);
+            text-decoration: none;
+        }
+
+        /* Projects - cream */
+        .projects {
+            background: var(--cream);
+            padding: 80px 0;
+        }
+
+        .projects-header {
+            padding: 0 16px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .projects-title {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(32px, 8vw, 64px);
+            font-weight: 300;
+            letter-spacing: -0.03em;
+            text-transform: lowercase;
+        }
+
+        .projects-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        .project {
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .project:last-of-type {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .project-image-container {
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            background: var(--black);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .project:hover .project-image {
+            transform: scale(1.03);
+        }
+
+        .project-content {
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .project-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            opacity: 0.4;
+        }
+
+        .project-course {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            text-transform: lowercase;
+            opacity: 0.5;
+        }
+
+        .project-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 400;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            text-transform: lowercase;
+            margin-bottom: 12px;
+        }
+
+        .project-description {
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.6;
+            opacity: 0.7;
+            margin-bottom: 24px;
+        }
+
+        .project-skills {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            text-transform: lowercase;
+            opacity: 0.4;
+            line-height: 1.8;
+        }
+
+        /* Headshot section - inverted, minimal */
+        .headshot-section {
+            background: var(--black);
+            padding: 80px 16px;
+            display: flex;
+            gap: 48px;
+            align-items: flex-start;
+        }
+
+        .headshot-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            filter: contrast(1.1);
+        }
+
+        .headshot-info {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--cream);
+            opacity: 0.5;
+            line-height: 2;
+            text-transform: lowercase;
+        }
+
+        /* Contact - cream with big type */
+        .contact {
+            background: var(--cream);
+            padding: 120px 16px;
+        }
+
+        .contact-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            opacity: 0.5;
+            margin-bottom: 24px;
+        }
+
+        .contact-email {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(24px, 6vw, 48px);
+            font-weight: 300;
+            letter-spacing: -0.03em;
+            color: var(--black);
+            text-decoration: none;
+            text-transform: lowercase;
+            display: inline-block;
+            position: relative;
+        }
+
+        .contact-email::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--red);
+        }
+
+        .contact-location {
+            margin-top: 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            opacity: 0.5;
+            text-transform: lowercase;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--black);
+            color: var(--cream);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            opacity: 0.5;
+            text-transform: lowercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 12px;
+            }
+
+            .nav-links {
+                gap: 16px;
+            }
+
+            .hero {
+                height: 250vh;
+            }
+
+            .hero-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .hero-meta {
+                text-align: left;
+                max-width: none;
+            }
+
+            .about {
+                padding: 60px 16px;
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .about-image-container {
+                order: -1;
+                justify-content: flex-start;
+            }
+
+            .about-image {
+                max-width: 280px;
+            }
+
+            .projects-header {
+                padding: 0 16px 32px;
+            }
+
+            .project {
+                grid-template-columns: 1fr;
+            }
+
+            .project-content {
+                padding: 24px 16px 40px;
+            }
+
+            .headshot-section {
+                flex-direction: column;
+                gap: 24px;
+                padding: 60px 16px;
+            }
+
+            .headshot-image {
+                width: 80px;
+                height: 80px;
+            }
+
+            .contact {
+                padding: 80px 16px;
+            }
+
+            footer {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" class="nav-logo">vitaly li</a>
+        <div class="nav-links">
+            <a href="#about">about</a>
+            <a href="#projects">projects</a>
+            <a href="#contact">contact</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-video-wrapper">
+            <video class="hero-video" muted playsinline preload="auto">
+                <source src="analog.mp4" type="video/mp4">
+            </video>
+            <div class="video-progress">
+                <div class="video-progress-bar"></div>
+            </div>
+            <span class="scroll-hint">scroll to play</span>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-name">vitaly li</h1>
+            <p class="hero-meta">engineering student<br>bend, oregon<br>2028</p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="about" id="about">
+        <div class="about-inner">
+            <span class="section-label">001 about</span>
+            <p class="about-text">I'm a sophomore at Oregon State University – Cascades studying Engineering Science. Most of my work stems from personal passion — analog synthesizers, small photography tools, and custom climbing and mountaineering gear. Outside of school I find solace in the mountains — climbing, mountaineering, skiing, and paragliding. I'm drawn to difficult things. When I'm not outside I'm usually making something, whether that's music, photos, videos, or whatever project I've engrossed myself in.</p>
+            <div class="about-contact">
+                <a href="mailto:lv@oregonstate.edu">lv@oregonstate.edu</a><br>
+                osu–cascades, bend, oregon
+            </div>
+        </div>
+        <div class="about-image-container">
+            <img src="about-photo.jpg" alt="" class="about-image">
+        </div>
+    </section>
+
+    <section class="projects" id="projects">
+        <header class="projects-header">
+            <h2 class="projects-title">work</h2>
+            <span class="projects-count">002 projects</span>
+        </header>
+
+        <article class="project">
+            <div class="project-image-container">
+                <img src="synth-photo.jpg" alt="Analog Modular Synthesizer" class="project-image">
+            </div>
+            <div class="project-content">
+                <div class="project-header">
+                    <span class="project-number">01</span>
+                    <span class="project-course">engr 202</span>
+                </div>
+                <div>
+                    <h3 class="project-title">analog modular synthesizer</h3>
+                    <p class="project-description">A fully analog modular synthesizer capable of generating and shaping audio signals through voltage-controlled modules. The system integrates a VCO, VCF, VCA, and Slew Limiter to produce a wide range of novel synthesized sounds. Designed, prototyped, and debugged entirely by hand.</p>
+                </div>
+                <p class="project-skills">analog circuit design / spice simulation / soldering / oscilloscope / schematic reading / breadboard prototyping / vco, vcf, vca / signal analysis</p>
+            </div>
+        </article>
+
+        <article class="project">
+            <div class="project-image-container">
+                <img src="generator-photo.jpg" alt="Hand Crank Generator" class="project-image">
+            </div>
+            <div class="project-content">
+                <div class="project-header">
+                    <span class="project-number">02</span>
+                    <span class="project-course">engr 103</span>
+                </div>
+                <div>
+                    <h3 class="project-title">hand crank generator</h3>
+                    <p class="project-description">A hand-powered electrical generator designed and built from scratch. The gear mechanism was modeled in Fusion 360 and 3D printed, then integrated with a microcontroller to regulate and measure power output.</p>
+                </div>
+                <p class="project-skills">python / fusion 360 / 3d printing / mechanical design / wiring and assembly / data logging / power analysis / microcontroller</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="headshot-section">
+        <img src="headshot.jpg" alt="Vitaly Li" class="headshot-image">
+        <div class="headshot-info">
+            vitaly li<br>
+            b. 2005<br>
+            santa cruz → bend<br>
+            engineering science
+        </div>
+    </section>
+
+    <section class="contact" id="contact">
+        <span class="contact-label">003 contact</span>
+        <a href="mailto:lv@oregonstate.edu" class="contact-email">lv@oregonstate.edu</a>
+        <p class="contact-location">bend, oregon</p>
+    </section>
+
+    <footer>
+        <span>2025</span>
+        <span>by hand</span>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Drawing line on scroll
+        const line = document.querySelector('.divider');
+        const lineObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    line.classList.add('drawn');
+                }
+            });
+        }, { threshold: 0.5 });
+        lineObserver.observe(line);
+
+        // Scroll-driven video playback
+        const video = document.querySelector('.hero-video');
+        const hero = document.querySelector('.hero');
+        const progressBar = document.querySelector('.video-progress-bar');
+        const scrollHint = document.querySelector('.scroll-hint');
+        let hasScrolled = false;
+
+        function setupVideo() {
+            const duration = video.duration;
+            if (!duration || isNaN(duration)) return;
+
+            const updateVideo = () => {
+                const heroRect = hero.getBoundingClientRect();
+                const scrollableDistance = hero.offsetHeight - window.innerHeight;
+                const scrolled = -heroRect.top;
+                const progress = Math.min(Math.max(scrolled / scrollableDistance, 0), 1);
+                video.currentTime = progress * duration;
+                progressBar.style.width = (progress * 100) + '%';
+
+                if (!hasScrolled && scrolled > 10) {
+                    hasScrolled = true;
+                    scrollHint.classList.add('hidden');
+                }
+            };
+
+            window.addEventListener('scroll', updateVideo, { passive: true });
+            updateVideo();
+        }
+
+        video.addEventListener('loadedmetadata', setupVideo);
+        if (video.readyState >= 1) setupVideo();
+    </script>
+</body>
+</html>
